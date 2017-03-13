@@ -1,18 +1,11 @@
-
 package main
 
-import (
-	"os"
-  "strconv"
-  "github.com/kintone/go-kintone"
-)
+import "github.com/kintone/go-kintone"
 
 func newApp() *kintone.App {
-  appId, _ := strconv.ParseUint(os.Getenv("KINTONE_APP_ID"), 10, 64)
-
-  return &kintone.App{
-		Domain:   os.Getenv("KINTONE_DOMAIN"),
-		ApiToken: os.Getenv("KINTONE_API_TOKEN"),
-		AppId:    appId,
+	return &kintone.App{
+		Domain:   "r0pri.cybozu.com",
+		ApiToken: "orHrvJ3Y8Urgpdz1MhMdCV1bJRQfT1U34ZMFTdbz",
+		AppId:    61,
 	}
 }

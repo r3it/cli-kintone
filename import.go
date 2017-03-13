@@ -340,14 +340,13 @@ func upsert(app *kintone.App, recs []*kintone.Record, keyField string) error {
 // for upsert, recs was splitted to insert records and update records.
 func splitRecordsForUpsert(app *kintone.App, recs []*kintone.Record, keyField string) ([]*kintone.Record, []*kintone.Record, error) {
 	if keyField == "" {
-		keyField = "$Id"
+		keyField = "$id"
 	}
-	fmt.Println("1")
+
 	records, err := app.GetRecords([]string{keyField}, buildQuery(recs, keyField))
 	if err != nil {
 		return nil, nil, err
 	}
-	fmt.Println("2")
 	recordsInsert := make([]*kintone.Record, 0, IMPORT_ROW_LIMIT)
 	recordsUpdate := make([]*kintone.Record, 0, IMPORT_ROW_LIMIT)
 	for _, rec := range recs {
@@ -358,7 +357,6 @@ func splitRecordsForUpsert(app *kintone.App, recs []*kintone.Record, keyField st
 			recordsInsert = append(recordsInsert, rec)
 		}
 	}
-	fmt.Println("3")
 	return recordsInsert, recordsUpdate, nil
 }
 
