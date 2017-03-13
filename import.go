@@ -209,7 +209,7 @@ func readCsv(app *kintone.App, _reader io.Reader) error {
 				setRecordUpdatable(record, columns)
 				recordsUpdate = append(recordsUpdate, kintone.NewRecordWithId(id, record))
 				if len(recordsUpdate) >= IMPORT_ROW_LIMIT {
-					err = update(app, recordsUpdate[:], keyField)
+					err = upsert(app, recordsUpdate[:], keyField)
 					if err != nil {
 						return err
 					}
@@ -228,7 +228,7 @@ func readCsv(app *kintone.App, _reader io.Reader) error {
 		}
 	}
 	if len(recordsUpdate) > 0 {
-		err = update(app, recordsUpdate[:], keyField)
+		err = upsert(app, recordsUpdate[:], keyField)
 		if err != nil {
 			return err
 		}
@@ -312,6 +312,80 @@ func update(app *kintone.App, recs []*kintone.Record, keyField string) error {
 		err = app.UpdateRecords(recs, true)
 	}
 	return err
+}
+
+func upsert(app *kintone.App, recs []*kintone.Record, keyField string) error {
+	recordsInsert, recordsUpdate, err := splitRecordsForUpsert(app, recs, keyField)
+	if err != nil {
+		return err
+	}
+
+	if len(recordsInsert) > 0 {
+		err = insert(app, recordsInsert[:])
+		if err != nil {
+			return err
+		}
+	}
+
+	if len(recordsUpdate) > 0 {
+		err = update(app, recordsUpdate[:], keyField)
+		if err != nil {
+			return err
+		}
+	}
+
+	return err
+}
+
+// for upsert, recs was splitted to insert records and update records.
+func splitRecordsForUpsert(app *kintone.App, recs []*kintone.Record, keyField string) ([]*kintone.Record, []*kintone.Record, error) {
+	if keyField == "" {
+		keyField = "$id"
+	}
+
+	records, err := app.GetRecords([]string{keyField}, buildQuery(recs, keyField))
+	if err != nil {
+		return nil, nil, err
+	}
+	recordsInsert := make([]*kintone.Record, 0, IMPORT_ROW_LIMIT)
+	recordsUpdate := make([]*kintone.Record, 0, IMPORT_ROW_LIMIT)
+	for _, rec := range recs {
+		val := getKeyFieldValueAsString(rec, keyField)
+		if isExistsInKintoneRecords(val, records, keyField) {
+			recordsUpdate = append(recordsUpdate, rec)
+		} else {
+			recordsInsert = append(recordsInsert, rec)
+		}
+	}
+	return recordsInsert, recordsUpdate, nil
+}
+
+func getKeyFieldValueAsString(rec *kintone.Record, keyField string) string {
+	return toString(rec.Fields[keyField], "")
+}
+
+func getKeyFieldValues(recs []*kintone.Record, keyField string) []string {
+	keyFieldValues := make([]string, 0)
+	for _, record := range recs {
+		keyFieldValues = append(keyFieldValues, getKeyFieldValueAsString(record, keyField))
+	}
+	return keyFieldValues
+}
+
+func buildQuery(recs []*kintone.Record, keyField string) string {
+	keyFieldValues := getKeyFieldValues(recs, keyField)
+	queryParameter := fmt.Sprintf("\"%v\"", strings.Join(keyFieldValues, "\",\""))
+	return fmt.Sprintf("%v in (%v)", keyField, queryParameter)
+}
+
+// check the keyField value exists kintone records or not.
+func isExistsInKintoneRecords(val string, recs []*kintone.Record, keyField string) bool {
+	for _, rec := range recs {
+		if val == getKeyFieldValueAsString(rec, keyField) {
+			return true
+		}
+	}
+	return false
 }
 
 // delete specific records
