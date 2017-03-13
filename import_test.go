@@ -1,26 +1,26 @@
-
 package main
 
 import (
 	"bytes"
 	//"io"
-  //"fmt"
+	//"fmt"
 	"testing"
-  "github.com/kintone/go-kintone"
+
+	"github.com/kintone/go-kintone"
 )
 
 func TestImport1(t *testing.T) {
-  data := "\"single_line_text\",\"multi_line_text\",\"number\",\"date_and_time\"\n\"single line2\",\"multi line2\nmulti line\",\"12345\",\"2016-09-12T10:13:00Z\"\n\"single line1\",\"multi line1\nmulti line\",\"12345\",\"2016-09-12T10:13:00Z\""
+	data := "\"single_line_text\",\"multi_line_text\",\"number\",\"date_and_time\"\n\"single line2\",\"multi line2\nmulti line\",\"12345\",\"2016-09-12T10:13:00Z\"\n\"single line1\",\"multi line1\nmulti line\",\"12345\",\"2016-09-12T10:13:00Z\""
 
 	app := newApp()
 
 	config.deleteAll = true
-  err := readCsv(app, bytes.NewBufferString(data))
+	err := readCsv(app, bytes.NewBufferString(data))
 	if err != nil {
 		t.Error(err)
 	}
 
-	recs, err := app.GetRecords(nil, "order by record_number desc")
+	recs, err := app.GetRecords(nil, "order by $id desc")
 	if err != nil {
 		t.Error(err)
 	}
@@ -51,17 +51,17 @@ func TestImport1(t *testing.T) {
 }
 
 func TestImport2(t *testing.T) {
-  data := "\"*\",\"single_line_text\",\"multi_line_text\",\"number\",\"date_and_time\",\"table_single_line_text\",\"table_multi_line_text\"\n\"*\",\"single line2\",\"multi line2\nmulti line\",\"12345\",\"2016-09-12T10:13:00Z\",\"single1\",\"multi1\"\n\"\",\"single line2\",\"multi line2\nmulti line\",\"12345\",\"2016-09-12T10:13:00Z\",\"single2\",\"multi2\"\n\"*\",\"single line1\",\"multi line1\nmulti line\",\"12345\",\"2016-09-12T10:13:00Z\",\"\",\"\""
+	data := "\"*\",\"single_line_text\",\"multi_line_text\",\"number\",\"date_and_time\",\"table_single_line_text\",\"table_multi_line_text\"\n\"*\",\"single line2\",\"multi line2\nmulti line\",\"12345\",\"2016-09-12T10:13:00Z\",\"single1\",\"multi1\"\n\"\",\"single line2\",\"multi line2\nmulti line\",\"12345\",\"2016-09-12T10:13:00Z\",\"single2\",\"multi2\"\n\"*\",\"single line1\",\"multi line1\nmulti line\",\"12345\",\"2016-09-12T10:13:00Z\",\"\",\"\""
 
 	app := newApp()
 
 	config.deleteAll = true
-  err := readCsv(app, bytes.NewBufferString(data))
+	err := readCsv(app, bytes.NewBufferString(data))
 	if err != nil {
 		t.Error(err)
 	}
 
-	recs, err := app.GetRecords(nil, "order by record_number asc")
+	recs, err := app.GetRecords(nil, "order by $id asc")
 	if err != nil {
 		t.Error(err)
 	}
